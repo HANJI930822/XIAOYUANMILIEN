@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>劇本轉換工具 V3 (自動對話格式)</title>
+    <style>
+        body { background-color: #222; color: #fff; font-family: sans-serif; padding: 20px; display: flex; gap: 20px; height: 90vh; }
+        .container { flex: 1; display: flex; flex-direction: column; }
+        textarea { flex: 1; background-color: #333; color: #eee; border: 1px solid #555; padding: 10px; font-family: monospace; font-size: 14px; resize: none; }
+        button { margin: 10px 0; padding: 15px; background-color: #ee6c4d; color: white; border: none; cursor: pointer; font-size: 1.2em; }
+        button:hover { background-color: #ff8c6d; }
+        h2 { margin-top: 0; color: #98c1d9; }
+        .help { background: #444; padding: 10px; font-size: 0.9em; margin-bottom: 10px; border-radius: 5px; }
+        code { color: #ff9; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>1. 劇本輸入區</h2>
+        <div class="help">
+            <b>支援格式：</b><br>
+            對話：<code>林宇軒：「你好。」</code> (自動變色)<br>
+            場景：<code># ID | bg:圖.jpg</code><br>
+            選項：<code>* 選項 -> ID | 數值+1</code>
+        </div>
+        <textarea id="inputScript" placeholder="# start&#10;林宇軒：「你好！」&#10;* 下一步 -> next"></textarea>
+    </div>
+
+    <div style="display: flex; flex-direction: column; justify-content: center;">
+        <button onclick="convert()">→</button>
+    </div>
+
+    <div class="container">
+        <h2>2. 代碼輸出區</h2>
+        <textarea id="outputCode" readonly></textarea>
+        <button onclick="copyToClipboard()">複製代碼</button>
+    </div>
+
+    <script>
+        function convert() {
+            const input = document.getElementById('inputScript').value;
+            const lines = input.split('\n');
+            const storyData = {};
+            
+            let currentId = null;
+            let currentData = { text: [], choices: [] };
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+
+                // 1. 偵測場景 ID
+                if (line.startsWith('#')) {
+                    if (currentId) {
+                        storyData[currentId] = {
+                            text: currentData.text.join('\n\n'),
+                            choices: currentData.choices,
+                            bg: currentData.bg,
+                            bgm: currentData.bgm
+                        };
+                    }
+                    const parts = line.substring(1).split('|');
+                    currentId = parts[0].trim();
+                    currentData = { text: [], choices: [] };
+                    for(let i=1; i<parts.length; i++) {
+                        const param = parts[i].trim();
+                        if(param.startsWith('bg:')) currentData.bg = param.replace('bg:', '').trim();
+                        if(param.startsWith('bgm:')) currentData.bgm = param.replace('bgm:', '').trim();
+                    }
+                }
+                // 2. 偵測選項
+                else if (line.startsWith('*')) {
+                    if (line.includes('->')) {
+                        const rawParts = line.substring(1).split('|');
+                        const mainPart = rawParts[0].split('->');
+                        let choiceObj = {
+                            text: mainPart[0].trim(),
+                            nextNode: mainPart[1].trim()
+                        };
+                        if (rawParts.length > 1) {
+                            choiceObj.effect = {};
+                            const effects = rawParts[1].split(',');
+                            effects.forEach(eff => {
+                                eff = eff.trim();
+                                const match = eff.match(/([a-zA-Z]+)([+\-]\d+)/);
+                                if (match) choiceObj.effect[match[1]] = parseInt(match[2]);
+                            });
+                        }
+                        currentData.choices.push(choiceObj);
+                    }
+                }
+                // 3. 智能偵測對話格式 (重點更新！)
+                else {
+                    // 如果這一行包含 「 (全形冒號+上引號)
+                    if (line.includes('：「')) {
+                        // 自動幫名字加上 span 標籤
+                        let formattedLine = line.replace(/(.+?)：「/, "<span class='name-tag'>$1</span>：「");
+                        currentData.text.push(formattedLine);
+                    } else {
+                        currentData.text.push(line);
+                    }
+                }
+            });
+
+            if (currentId) {
+                storyData[currentId] = {
+                    text: currentData.text.join('\n\n'),
+                    choices: currentData.choices,
+                    bg: currentData.bg,
+                    bgm: currentData.bgm
+                };
+            }
+
+            const jsonString = JSON.stringify(storyData, null, 4);
+            document.getElementById('outputCode').value = `const storyData = ${jsonString};`;
+        }
+
+        function copyToClipboard() {
+            const copyText = document.getElementById("outputCode");
+            copyText.select();
+            document.execCommand("copy");
+            alert("已複製！");
+        }
+    </script>
+</body>
+</html>

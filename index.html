@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校園迷戀 - Interactive Fiction</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-bg" class="background-layer"></div>
+
+    <!-- 開始畫面 -->
+    <div id="start-screen" class="game-container" style="text-align: center; justify-content: center;">
+        <h1 style="font-size: 2.5em; color: #98c1d9; margin-bottom: 20px;">校園迷戀</h1>
+        <p style="font-size: 1.2em; color: #e0e0e0; margin-bottom: 40px;">一段關於青春、選擇與成長的故事</p>
+        <button onclick="startGame()" style="font-size: 1.3em; padding: 20px 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; cursor: pointer; border-radius: 10px; color: white; box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);">
+            開始遊戲
+        </button>
+    </div>
+
+    <!-- 遊戲主畫面 -->
+    <div id="game-main" class="game-container" style="display: none;">
+        <div class="top-bar">
+            <h1 class="game-title">《校園迷戀》</h1>
+            <div class="system-buttons">
+                <button onclick="saveGame()">存檔</button>
+                <button onclick="loadGame()">讀檔</button>
+                <button onclick="toggleMusic()" id="music-btn">🔊 音樂</button>
+                <button onclick="restartGame()" style="background-color:#d62828;">重來</button>
+            </div>
+        </div>
+
+        <div id="status-bar" class="status-bar">
+            <span>❤️ 晨希: <b id="stat-chenxi">0</b></span>
+            <span>💙 宇軒: <b id="stat-yuxuan">0</b></span>
+            <span style="color: #cfbaf0;">💜 若雨: <b id="stat-wen">0</b></span>
+            <span style="color: #90dbf4;">💻 景行: <b id="stat-fang">0</b></span>
+        </div>
+        
+        <div id="story-text" class="text-area fade-in"></div>
+        
+        <div id="choices" class="options"></div>
+    </div>
+
+    <audio id="bgm-player" loop></audio>
+
+    <script src="data.js"></script>
+    <script src="assets.js"></script>
+    <script src="game.js"></script>
+
+</body>
+</html>
